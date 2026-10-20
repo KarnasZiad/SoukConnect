@@ -1,0 +1,24 @@
+name: Fonctionnalité
+description: Proposer une user story
+labels: [enhancement]
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      placeholder: En tant que <rôle>, je veux <action> afin de <bénéfice>.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critères d'acceptation
+      placeholder: |
+        - Étant donné ..., quand ..., alors ...
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priorité (MoSCoW)
+      options: [Must, Should, Could, Won't]

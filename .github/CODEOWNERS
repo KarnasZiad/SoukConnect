@@ -1,0 +1,9 @@
+# Code owners are requested automatically on every pull request.
+* @KarnasZiad
+
+# Money, identity and message contracts need a security-focused review.
+/services/payments/ @KarnasZiad
+/services/gateway/src/auth/ @KarnasZiad
+/packages/contracts/ @KarnasZiad
+/packages/messaging/ @KarnasZiad
+/k8s/ @KarnasZiad

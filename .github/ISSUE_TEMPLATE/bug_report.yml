@@ -1,0 +1,30 @@
+name: Bug
+description: Signaler un comportement incorrect
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Ce qui se passe, et ce qui devrait se passer.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: |
+        1. Se connecter en tant qu'acheteur (fr, en ou ar)
+        2. Ajouter au panier ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version ou commit
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (sans données personnelles)
+      render: text
