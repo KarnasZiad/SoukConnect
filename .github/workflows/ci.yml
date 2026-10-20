@@ -46,3 +46,23 @@ jobs:
             packages/*/coverage
           retention-days: 7
           if-no-files-found: ignore
+
+  integration:
+    name: Integration tests (RabbitMQ, PostgreSQL, MongoDB)
+    needs: quality
+    # MongoDB refuses to start on Linux kernels 6.19 to 7.0.13 (SERVER-121912), the kernel of the
+    # current ubuntu-latest image. Back to ubuntu-latest once its kernel is 7.0.14 or later.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Pulling up front keeps image downloads out of the containers' startup timeouts.
+      - name: Pull test images
+        run: docker pull --quiet rabbitmq:4.3-alpine & docker pull --quiet postgres:17-alpine & docker pull --quiet mongo:8.0 & wait
+      - run: pnpm test:integration
