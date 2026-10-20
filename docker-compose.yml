@@ -1,0 +1,103 @@
+# Local infrastructure.
+#   docker compose up -d     PostgreSQL, MongoDB, Redis, RabbitMQ, Meilisearch, Mailpit
+#                            (run the services and the front with pnpm dev)
+# Everything listens on the loopback only, with development credentials: local use only.
+name: soukconnect
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # One database and one role per service: no service can read another one's tables.
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mongo:
+    image: mongo:8.0
+    # A single-member replica set: multi-document transactions need one (stock reservations).
+    command: ['--replSet', 'rs0', '--bind_ip_all']
+    ports:
+      - '127.0.0.1:27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      # Initiates the replica set on first start, then reports its health.
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] }).ok }"
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 10s
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - '127.0.0.1:6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4.3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: souk
+      RABBITMQ_DEFAULT_PASS: souk
+    ports:
+      - '127.0.0.1:5672:5672'
+      # Management UI: http://localhost:15672 (souk / souk)
+      - '127.0.0.1:15672:15672'
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'check_port_connectivity']
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.54
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-local-development-master-key-change-me}
+      MEILI_NO_ANALYTICS: 'true'
+    ports:
+      - '127.0.0.1:7700:7700'
+    volumes:
+      - meili-data:/meili_data
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7700/health']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:v1.31
+    # SMTP on 1025, web inbox on http://localhost:8025
+    ports:
+      - '127.0.0.1:1025:1025'
+      - '127.0.0.1:8025:8025'
+
+volumes:
+  postgres-data:
+  mongo-data:
+  redis-data:
+  rabbitmq-data:
+  meili-data:
