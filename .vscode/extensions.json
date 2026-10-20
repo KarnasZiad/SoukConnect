@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "mongodb.mongodb-vscode",
+    "vitest.explorer",
+    "ms-playwright.playwright",
+    "ms-kubernetes-tools.vscode-kubernetes-tools"
+  ]
+}

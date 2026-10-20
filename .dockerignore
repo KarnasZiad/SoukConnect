@@ -1,0 +1,15 @@
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
+.husky
+.vscode
+docs
+k8s
+*.md

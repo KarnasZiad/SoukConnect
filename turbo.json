@@ -1,0 +1,26 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "typecheck": {
+      "outputs": []
+    },
+    "test": {
+      "outputs": []
+    },
+    "test:coverage": {
+      "outputs": ["coverage/**"]
+    },
+    "test:integration": {
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

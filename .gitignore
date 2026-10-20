@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Turborepo
+.turbo/
+
+# Tests
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editors and systems
+.idea/
+.DS_Store
+Thumbs.db
