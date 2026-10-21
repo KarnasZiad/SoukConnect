@@ -175,6 +175,53 @@ describe('accounts (US-14)', () => {
   });
 });
 
+describe('contact details for e-mails', () => {
+  it('hands the contact to the notifications service at sign-up, as the new account', async () => {
+    const gateway = await setup();
+    const { response } = await register(gateway);
+
+    expect(gateway.internal.calls).toContainEqual(
+      expect.objectContaining({
+        upstream: 'notifications',
+        method: 'PUT',
+        path: '/contacts/me',
+        body: { email: 'amina@example.ma', displayName: 'Amina', locale: 'ar' },
+        actor: { userId: response.json<{ id: string }>().id, role: 'buyer', shopId: null },
+      }),
+    );
+  });
+
+  it('still opens the account when the notifications service is down', async () => {
+    const gateway = await setup();
+    gateway.internal.notificationsStatus = 503;
+    expect((await register(gateway)).response.statusCode).toBe(201);
+  });
+
+  it('keeps the account while its contact cannot be erased', async () => {
+    const gateway = await setup();
+    const { cookie } = await register(gateway);
+    gateway.internal.notificationsStatus = 503;
+
+    const refused = await send(gateway, 'POST', '/api/auth/account/delete', {
+      cookie,
+      payload: { password: passphrase },
+    });
+    expect(refused.statusCode).toBe(503);
+    expect(gateway.accounts.accounts.size).toBe(1);
+
+    gateway.internal.notificationsStatus = 204;
+    expect(
+      (
+        await send(gateway, 'POST', '/api/auth/account/delete', {
+          cookie,
+          payload: { password: passphrase },
+        })
+      ).statusCode,
+    ).toBe(204);
+    expect(gateway.internal.calls.at(-1)).toMatchObject({ method: 'DELETE', path: '/contacts/me' });
+  });
+});
+
 describe('CSRF', () => {
   it('refuses a state change from another origin, or without one, except the Stripe webhook', async () => {
     const gateway = await setup();

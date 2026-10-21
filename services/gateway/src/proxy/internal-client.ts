@@ -12,7 +12,7 @@ export interface InternalClient {
     upstream: Upstream,
     actor: Actor,
     request: {
-      method: 'GET' | 'POST';
+      method: 'GET' | 'POST' | 'PUT' | 'DELETE';
       path: string;
       body?: unknown;
       headers?: Record<string, string>;
@@ -32,7 +32,7 @@ export class FetchInternalClient implements InternalClient {
     upstream: Upstream,
     actor: Actor,
     request: {
-      method: 'GET' | 'POST';
+      method: 'GET' | 'POST' | 'PUT' | 'DELETE';
       path: string;
       body?: unknown;
       headers?: Record<string, string>;
@@ -51,6 +51,8 @@ export class FetchInternalClient implements InternalClient {
       ...(request.body === undefined ? {} : { body: JSON.stringify(request.body) }),
       signal: AbortSignal.timeout(this.timeoutMs),
     });
-    return { status: response.status, body: (await response.json()) as T };
+    // 204 and other empty answers have no JSON to read.
+    const text = await response.text();
+    return { status: response.status, body: (text === '' ? undefined : JSON.parse(text)) as T };
   }
 }

@@ -141,18 +141,25 @@ export class FakeInternal implements InternalClient {
   }[] = [];
   products: Record<string, unknown>[] = [];
   orderStatus = 202;
+  notificationsStatus = 204;
 
   call<T>(
     upstream: Upstream,
     actor: Actor,
     request: {
-      method: 'GET' | 'POST';
+      method: 'GET' | 'POST' | 'PUT' | 'DELETE';
       path: string;
       body?: unknown;
       headers?: Record<string, string>;
     },
   ) {
     this.calls.push({ upstream, actor, ...request });
+    if (upstream === 'notifications') {
+      return Promise.resolve({
+        status: this.notificationsStatus,
+        body: undefined,
+      } as UpstreamResponse<T>);
+    }
     if (upstream === 'catalog') {
       const ids = new URL(request.path, 'http://x').searchParams.get('ids')?.split(',') ?? [];
       return Promise.resolve({
