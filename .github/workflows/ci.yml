@@ -65,7 +65,7 @@ jobs:
       # Pulling up front keeps image downloads out of the containers' startup timeouts.
       - name: Pull test images
         run: |
-          for image in rabbitmq:4.3-alpine postgres:17-alpine mongo:8.0 redis:7.4-alpine getmeili/meilisearch:v1.54; do
+          for image in rabbitmq:4.3-alpine postgres:17-alpine mongo:8.0 redis:7.4-alpine getmeili/meilisearch:v1.54 axllent/mailpit:v1.31; do
             docker pull --quiet "$image" &
           done
           wait
@@ -82,7 +82,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [gateway, catalog, orders, payments]
+        service: [gateway, catalog, orders, payments, notifications]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Compute image name
