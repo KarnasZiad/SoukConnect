@@ -1,0 +1,40 @@
+{
+  "name": "@soukconnect/service-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bootstrap shared by the services: Fastify with Zod and OpenAPI, internal EdDSA tokens, problem+json errors, health, logging, graceful shutdown",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@soukconnect/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@fastify/helmet": "^13.2.0",
+    "@fastify/swagger": "^9.9.2",
+    "@soukconnect/contracts": "workspace:*",
+    "fastify": "^5.12.7",
+    "fastify-type-provider-zod": "^7.0.0",
+    "jose": "^6.2.12",
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@vitest/coverage-v8": "^4.1.12",
+    "vitest": "^4.1.12"
+  }
+}
