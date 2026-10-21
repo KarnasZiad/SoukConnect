@@ -1,3 +1,4 @@
+export * from './catalog.js';
 export * from './envelope.js';
 export * from './ids.js';
 export * from './locales.js';

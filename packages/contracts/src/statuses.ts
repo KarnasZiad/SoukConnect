@@ -25,3 +25,7 @@ export type CancellationReason = (typeof CANCELLATION_REASONS)[number];
 
 export const ROLES = ['buyer', 'seller', 'moderator'] as const;
 export type Role = (typeof ROLES)[number];
+
+/** A shop is visible once a moderator activated it (US-08). */
+export const SHOP_STATUSES = ['PENDING', 'ACTIVE', 'SUSPENDED'] as const;
+export type ShopStatus = (typeof SHOP_STATUSES)[number];

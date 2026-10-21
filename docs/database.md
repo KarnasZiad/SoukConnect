@@ -113,18 +113,18 @@ Sessions et paniers sont dans **Redis** : `sess:<sha256(id)>` (hash, TTL glissan
 ## Catalog — MongoDB
 
 ```jsonc
-// shops
-{ "_id": "uuid", "ownerId": "uuid", "slug": "atelier-fatima", "name": "Atelier Fatima",
-  "city": "Marrakech", "description": { "fr": "…", "ar": "…" }, "status": "ACTIVE",
+// shops : une boutique par vendeur, dont l'identifiant est celui du compte du vendeur
+{ "_id": "uuid du vendeur", "slug": "atelier-fatima", "name": "Atelier Fatima",
+  "city": "marrakech", "description": { "fr": "…", "ar": "…" }, "status": "ACTIVE",
   "commissionBps": 1000 }
 
 // products : attributs variables selon la catégorie, validés par un schéma Zod par catégorie
-{ "_id": "uuid", "shopId": "uuid", "slug": "tapis-beni-ouarain-200x300",
+{ "_id": "uuid v7", "shopId": "uuid", "slug": "tapis-beni-ouarain-3f9a1c",
   "category": "rug", "title": { "fr": "Tapis Beni Ouarain", "en": "Beni Ouarain rug" },
-  "description": { "fr": "…" }, "price": 450000, "currency": "MAD", "stock": 1,
-  "attributes": { "widthCm": 200, "lengthCm": 300, "material": "wool", "knotsPerDm2": 900 },
-  "images": [{ "url": "https://…", "width": 2400, "height": 1600, "alt": { "fr": "…" } }],
-  "status": "PUBLISHED", "updatedAt": "…" }
+  "description": { "fr": "…" }, "price": 450000, "currency": "MAD", "stock": 1, "sold": 0,
+  "attributes": { "widthCm": 200, "lengthCm": 300, "material": "wool", "style": "beni-ouarain" },
+  "images": [{ "url": "https://images.soukconnect.ma/…", "alt": { "fr": "…" } }],
+  "status": "PUBLISHED", "publishedAt": "…", "updatedAt": "…" }
 
 // reservations : une par commande, tout ou rien
 { "_id": "orderId", "status": "RESERVED | COMMITTED | RELEASED",
@@ -133,7 +133,13 @@ Sessions et paniers sont dans **Redis** : `sess:<sha256(id)>` (hash, TTL glissan
 
 Index : `products { shopId: 1, updatedAt: -1 }`, `products { slug: 1 }` unique, `shops { slug: 1 }`
 unique. Le stock se décrémente par `updateOne({ _id, stock: { $gte: q } }, { $inc: { stock: -q } })`
-dans une transaction (jeu de réplicas requis), avec l'insertion de la réservation et de l'outbox.
+dans une transaction (jeu de réplicas requis), avec l'insertion de la réservation, de l'inbox et de
+l'outbox. Deux commandes concurrentes sur la dernière pièce : l'une des transactions échoue sur un
+conflit d'écriture transitoire, le pilote la rejoue, et elle constate alors le stock épuisé.
+
+Le slug d'un produit est fixé à la création (titre sans accents + 6 caractères de l'identifiant) et
+ne change plus : une URL indexée par les moteurs reste valable. Les villes, catégories et matières
+sont des listes fermées (`packages/contracts`) : un filtre de recherche n'est jamais du texte libre.
 
 ## Notifications — MongoDB
 

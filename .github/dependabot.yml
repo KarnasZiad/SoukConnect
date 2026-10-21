@@ -23,3 +23,14 @@ updates:
       interval: weekly
     commit-message:
       prefix: ci
+
+  - package-ecosystem: docker
+    directories: [/services/catalog]
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+    ignore:
+      # The base image follows the Node.js LTS line pinned in .nvmrc.
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
