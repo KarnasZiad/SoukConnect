@@ -64,5 +64,69 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Pulling up front keeps image downloads out of the containers' startup timeouts.
       - name: Pull test images
-        run: docker pull --quiet rabbitmq:4.3-alpine & docker pull --quiet postgres:17-alpine & docker pull --quiet mongo:8.0 & wait
+        run: |
+          for image in rabbitmq:4.3-alpine postgres:17-alpine mongo:8.0 getmeili/meilisearch:v1.54; do
+            docker pull --quiet "$image" &
+          done
+          wait
       - run: pnpm test:integration
+
+  docker:
+    name: Docker image (${{ matrix.service }})
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [catalog]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Compute image name
+        id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/soukconnect-${{ matrix.service }}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        id: meta
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+      - name: Build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+      - name: Scan the image for critical vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.image.outputs.name }}:${{ steps.meta.outputs.version }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
