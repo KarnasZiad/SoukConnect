@@ -10,7 +10,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: ['src/**/*.spec.ts', 'src/index.ts'],
+      // The migrator needs a real PostgreSQL: covered by the integration tests of the services.
+      exclude: ['src/**/*.spec.ts', 'src/index.ts', 'src/postgres.ts'],
       reporter: ['text-summary', 'lcov', 'html'],
       thresholds: { lines: 90, statements: 90, functions: 90, branches: 85 },
     },

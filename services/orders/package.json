@@ -1,0 +1,38 @@
+{
+  "name": "@soukconnect/orders",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Orders service: multi-shop orders, orchestration of the order saga, shipments and seller statistics",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist",
+    "migrations"
+  ],
+  "scripts": {
+    "dev": "tsx watch --conditions=@soukconnect/source --env-file-if-exists=../../.env src/main.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
+  },
+  "dependencies": {
+    "@soukconnect/contracts": "workspace:*",
+    "@soukconnect/messaging": "workspace:*",
+    "@soukconnect/service-kit": "workspace:*",
+    "fastify": "^5.12.7",
+    "postgres": "^3.4.9",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^11.14.0",
+    "@testcontainers/rabbitmq": "^11.14.0",
+    "@types/node": "^22.20.5",
+    "@vitest/coverage-v8": "^4.1.12",
+    "testcontainers": "^11.14.0",
+    "tsx": "^4.23.15",
+    "vitest": "^4.1.12"
+  }
+}
