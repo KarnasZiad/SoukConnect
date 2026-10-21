@@ -65,6 +65,29 @@ export function registerRoutes(app: App, deps: RouteDeps): void {
   // ---- Public reads: visitors and robots, through the gateway
 
   app.get(
+    '/products',
+    {
+      schema: {
+        tags: ['public'],
+        querystring: z
+          .object({
+            ids: z
+              .string()
+              .transform((value) => [...new Set(value.split(','))])
+              .pipe(z.array(z.uuid()).min(1).max(50)),
+          })
+          .strict(),
+        response: { 200: z.object({ items: z.array(publicProductView) }) },
+      },
+    },
+    async (request) => {
+      // The products of a cart in one call; those no longer listed are simply absent.
+      const found = await store.getListedProducts(request.query.ids);
+      return { items: found.map(({ product, shop }) => toPublicProduct(product, shop)) };
+    },
+  );
+
+  app.get(
     '/products/:slug',
     {
       schema: {

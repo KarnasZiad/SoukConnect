@@ -33,6 +33,8 @@ export interface CatalogStore {
   ): Promise<Page<Product>>;
   /** A product visitors may see: published, in an active shop. */
   getListedProduct(slug: string): Promise<{ product: Product; shop: Shop } | null>;
+  /** The listed products among these identifiers, for the cart; unknown or unlisted ones are left out. */
+  getListedProducts(ids: readonly string[]): Promise<{ product: Product; shop: Shop }[]>;
   getForIndex(productId: string): Promise<{ product: Product; shop: Shop } | null>;
 }
 

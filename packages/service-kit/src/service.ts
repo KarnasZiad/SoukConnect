@@ -41,10 +41,11 @@ export interface ServiceOptions {
   /** Number of proxies in front of the service whose X-Forwarded-For can be trusted. */
   trustProxyHops?: number;
   /**
-   * Safety net per calling address, in memory. The real limits (per visitor, per account) are
-   * enforced by the gateway; this one stops a runaway or compromised internal caller.
+   * Per calling address. In a service it is a safety net in memory: the real limits (per visitor,
+   * per account) are enforced by the gateway, which passes an ioredis client so that its replicas
+   * share the counters.
    */
-  rateLimit?: { max: number; timeWindowMs: number };
+  rateLimit?: { max: number; timeWindowMs: number; redis?: object };
 }
 
 const REQUEST_ID = /^[A-Za-z0-9._:-]{8,64}$/;
@@ -79,6 +80,7 @@ export async function createService(options: ServiceOptions) {
     max: options.rateLimit?.max ?? 3000,
     timeWindow: options.rateLimit?.timeWindowMs ?? 60_000,
     allowList: (request) => request.routeOptions.config.public === true,
+    ...(options.rateLimit?.redis ? { redis: options.rateLimit.redis, nameSpace: 'rate:' } : {}),
   });
   await app.register(swagger, {
     openapi: {

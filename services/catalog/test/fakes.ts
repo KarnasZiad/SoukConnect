@@ -140,6 +140,16 @@ export class MemoryCatalogStore implements CatalogStore {
     );
   }
 
+  async getListedProducts(ids: readonly string[]): Promise<{ product: Product; shop: Shop }[]> {
+    const found = await Promise.all(
+      ids.map((id) => {
+        const product = this.products.get(id);
+        return product ? this.getListedProduct(product.slug) : Promise.resolve(null);
+      }),
+    );
+    return found.filter((entry) => entry !== null);
+  }
+
   getForIndex(productId: string): Promise<{ product: Product; shop: Shop } | null> {
     const product = this.products.get(productId);
     const shop = product ? this.shops.get(product.shopId) : undefined;
