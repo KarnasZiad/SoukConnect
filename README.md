@@ -12,7 +12,7 @@ suit sa livraison et échange avec les vendeurs en temps réel, en français, en
 > par RabbitMQ, saga de commande avec outbox et inbox, cohabitation SQL et NoSQL justifiée,
 > paiement Stripe idempotent, front Next.js rendu côté serveur en trois langues.
 
-**État** : conception, socle (contrats, messagerie, socle des services), catalogue et commandes terminés ;
+**État** : conception, socle (contrats, messagerie, socle des services), catalogue, commandes et paiements terminés ;
 les autres services suivent lot par lot, chacun par pull request ([feuille de route](#feuille-de-route)).
 
 ## Sommaire
@@ -92,7 +92,7 @@ docker compose up -d          # PostgreSQL, MongoDB, Redis, RabbitMQ, Meilisearc
 - [x] **L1** — Contrats d'événements, messagerie (outbox, inbox, reprises), socle des services
 - [x] **L2** — Catalogue et recherche, réservation de stock
 - [x] **L3** — Commandes et saga
-- [ ] **L4** — Paiements Stripe, webhooks, commissions
+- [x] **L4** — Paiements Stripe, webhooks, commissions
 - [ ] **L5** — Passerelle : comptes, sessions, panier, OpenAPI agrégé
 - [ ] **L6** — Notifications : messagerie et suivi en temps réel, e-mails
 - [ ] **L7** — Front Next.js : boutique, espace vendeur, FR/EN/AR
