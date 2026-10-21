@@ -223,12 +223,15 @@ describe('stock ledger', () => {
   });
 
   it('gives the stock back on release, once, and counts sales on commit', async () => {
-    const rug = await listedRug(2);
+    const rug = await listedRug(3);
     const first = orderId();
     const second = orderId();
     await stock.reserve(reserveCommand(first, [{ productId: rug.id, quantity: 2 }]));
     await stock.reserve(reserveCommand(second, [{ productId: rug.id, quantity: 1 }]));
     expect(await stockOf(rug.id)).toBe(0);
+    expect((await outboxTypes()).filter((type) => type === 'catalog.stock-reserved')).toHaveLength(
+      2,
+    );
 
     const release = createEnvelope(
       'catalog.release-stock',
