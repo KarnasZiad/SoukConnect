@@ -48,7 +48,10 @@ export const MESSAGES = {
   'catalog.stock-reserved': z.object({ orderId: id, currency, lines: lines(orderLine) }),
   'catalog.stock-rejected': z.object({
     orderId: id,
-    unavailable: lines(z.object({ productId: id, requested: quantity, available: z.int().min(0) })),
+    // Totals per product: the same product may appear on several lines.
+    unavailable: lines(
+      z.object({ productId: id, requested: z.int().min(1).max(10_000), available: z.int().min(0) }),
+    ),
   }),
   'catalog.product-changed': z.object({
     productId: id,
