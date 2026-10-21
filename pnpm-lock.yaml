@@ -138,6 +138,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^4.1.12
         version: 4.1.12(vitest@4.1.12)
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
       vitest:
         specifier: ^4.1.12
         version: 4.1.12(@types/node@22.20.5)(@vitest/coverage-v8@4.1.12)(vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1))
@@ -167,6 +170,49 @@ importers:
         version: 4.6.7
     devDependencies:
       '@testcontainers/mongodb':
+        specifier: ^11.14.0
+        version: 11.14.0
+      '@testcontainers/rabbitmq':
+        specifier: ^11.14.0
+        version: 11.14.0
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      '@vitest/coverage-v8':
+        specifier: ^4.1.12
+        version: 4.1.12(vitest@4.1.12)
+      testcontainers:
+        specifier: ^11.14.0
+        version: 11.14.0
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      vitest:
+        specifier: ^4.1.12
+        version: 4.1.12(@types/node@22.20.5)(@vitest/coverage-v8@4.1.12)(vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1))
+
+  services/orders:
+    dependencies:
+      '@soukconnect/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@soukconnect/messaging':
+        specifier: workspace:*
+        version: link:../../packages/messaging
+      '@soukconnect/service-kit':
+        specifier: workspace:*
+        version: link:../../packages/service-kit
+      fastify:
+        specifier: ^5.12.7
+        version: 5.12.7
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@testcontainers/postgresql':
         specifier: ^11.14.0
         version: 11.14.0
       '@testcontainers/rabbitmq':
