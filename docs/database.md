@@ -143,11 +143,15 @@ sont des listes fermées (`packages/contracts`) : un filtre de recherche n'est j
 
 ## Notifications — MongoDB
 
-| Collection      | Contenu                                                                                 |
-| --------------- | --------------------------------------------------------------------------------------- |
-| `conversations` | `buyerId`, `shopId`, `productId`, `lastMessageAt`, compteurs de non-lus par participant |
-| `messages`      | `conversationId`, `authorId`, `body` (texte, 2 000 caractères au plus), `createdAt`     |
-| `notifications` | `userId`, `type`, `orderId`, `readAt` ; TTL de 90 jours                                 |
+| Collection      | Contenu                                                                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `conversations` | `buyerId`, `shopId`, `productId`, `lastMessageAt`, compteurs de non-lus par participant ; unique par acheteur et boutique                            |
+| `messages`      | `conversationId`, `authorId`, `body` (texte, 2 000 caractères au plus), `createdAt`                                                                  |
+| `notifications` | `_id` = événement + destinataire (une seule par événement), `userId`, `type`, `orderId`, `readAt`, `emailedAt` ; TTL de 90 jours                     |
+| `contacts`      | `_id` = compte, `email`, `displayName`, `locale` : écrits par la passerelle à l'inscription, effacés avec le compte, utilisés pour les seuls e-mails |
+
+Les messages RabbitMQ ne portent aucune donnée personnelle : le service de notifications relit le
+contact de chaque destinataire au moment d'envoyer l'e-mail.
 
 ## Recherche — Meilisearch
 
