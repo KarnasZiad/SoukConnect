@@ -25,7 +25,7 @@ updates:
       prefix: ci
 
   - package-ecosystem: docker
-    directories: [/services/catalog]
+    directories: [/services/catalog, /services/orders]
     schedule:
       interval: weekly
     commit-message:
