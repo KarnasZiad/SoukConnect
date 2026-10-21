@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@fastify/helmet": "^13.2.0",
+    "@fastify/rate-limit": "^11.2.1",
     "@fastify/swagger": "^9.9.2",
     "@soukconnect/contracts": "workspace:*",
     "fastify": "^5.12.7",

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import type { Role } from '@soukconnect/contracts';
 import Fastify, { type FastifyRequest, LogController } from 'fastify';
@@ -39,6 +40,11 @@ export interface ServiceOptions {
   bodyLimit?: number;
   /** Number of proxies in front of the service whose X-Forwarded-For can be trusted. */
   trustProxyHops?: number;
+  /**
+   * Safety net per calling address, in memory. The real limits (per visitor, per account) are
+   * enforced by the gateway; this one stops a runaway or compromised internal caller.
+   */
+  rateLimit?: { max: number; timeWindowMs: number };
 }
 
 const REQUEST_ID = /^[A-Za-z0-9._:-]{8,64}$/;
@@ -67,6 +73,13 @@ export async function createService(options: ServiceOptions) {
 
   // An API returns JSON only: no content security policy needed, the other headers still apply.
   await app.register(helmet, { contentSecurityPolicy: false, global: true });
+  // Registered first: a flood is refused before any token is verified.
+  await app.register(rateLimit, {
+    global: true,
+    max: options.rateLimit?.max ?? 3000,
+    timeWindow: options.rateLimit?.timeWindowMs ?? 60_000,
+    allowList: (request) => request.routeOptions.config.public === true,
+  });
   await app.register(swagger, {
     openapi: {
       openapi: '3.1.0',
@@ -88,8 +101,10 @@ export async function createService(options: ServiceOptions) {
 
   const { verifyToken } = options;
   if (verifyToken) {
-    app.addHook('onRequest', async (request) => {
-      if (request.routeOptions.config.public === true) return;
+    // preParsing: after the rate limit (a route-level onRequest hook), before the body is read
+    // and validated, so that an unauthenticated caller learns nothing about the schemas.
+    app.addHook('preParsing', async (request, _reply, payload) => {
+      if (request.routeOptions.config.public === true) return payload;
       const header = request.headers.authorization;
       if (!header?.startsWith('Bearer ')) throw unauthorized();
       try {
@@ -98,6 +113,7 @@ export async function createService(options: ServiceOptions) {
         request.log.warn({ err: error }, 'internal token refused');
         throw unauthorized();
       }
+      return payload;
     });
   }
 

@@ -41,7 +41,10 @@ afterEach(async () => {
   await Promise.all(apps.splice(0).map((app) => app.close()));
 });
 
-async function service(health: Record<string, () => Promise<unknown>> = {}) {
+async function service(
+  health: Record<string, () => Promise<unknown>> = {},
+  rateLimit?: { max: number; timeWindowMs: number },
+) {
   const { privateJwk, publicJwk } = await generateSigningKeys('k1');
   const signing = await importSigningKey(JSON.stringify(privateJwk));
   const { logger, lines } = memoryLogger();
@@ -49,6 +52,7 @@ async function service(health: Record<string, () => Promise<unknown>> = {}) {
     name: 'orders',
     logger,
     health,
+    ...(rateLimit ? { rateLimit } : {}),
     verifyToken: createInternalVerifier({
       audience: 'orders',
       publicKeys: parsePublicKeys(JSON.stringify([publicJwk])),
@@ -207,6 +211,21 @@ describe('createService', () => {
   it('is ready when every dependency answers', async () => {
     const { app } = await service({ mongo: () => Promise.resolve() });
     expect((await app.inject({ url: '/health/ready' })).statusCode).toBe(200);
+  });
+
+  it('refuses a flood before verifying any token, but never the health checks', async () => {
+    const { app } = await service({}, { max: 2, timeWindowMs: 60_000 });
+    const statuses = [];
+    for (let index = 0; index < 3; index += 1) {
+      statuses.push((await app.inject({ url: '/whoami' })).statusCode);
+    }
+
+    expect(statuses).toEqual([401, 401, 429]);
+    const limited = await app.inject({ url: '/whoami' });
+    expect(limited.headers['content-type']).toContain('application/problem+json');
+    for (let index = 0; index < 5; index += 1) {
+      expect((await app.inject({ url: '/health/live' })).statusCode).toBe(200);
+    }
   });
 });
 
