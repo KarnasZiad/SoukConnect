@@ -18,9 +18,18 @@ describe('uuidv7', () => {
     expect(earlier < later).toBe(true);
   });
 
-  it('does not repeat itself within the same millisecond', () => {
+  it('keeps the creation order within the same millisecond', () => {
     const now = Date.now();
-    const ids = new Set(Array.from({ length: 1000 }, () => uuidv7(now)));
-    expect(ids.size).toBe(1000);
+    const ids = Array.from({ length: 1000 }, () => uuidv7(now));
+
+    expect(new Set(ids).size).toBe(1000);
+    expect([...ids].sort()).toEqual(ids);
+    expect(ids.every((id) => timestampOf(id) === now)).toBe(true);
+  });
+
+  it('stays unique past 4096 identifiers in one millisecond', () => {
+    const now = Date.now() + 1000;
+    const ids = Array.from({ length: 5000 }, () => uuidv7(now));
+    expect(new Set(ids).size).toBe(5000);
   });
 });
