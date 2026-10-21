@@ -228,6 +228,36 @@ describe('products (US-09)', () => {
   });
 });
 
+describe('products of a cart (US-04)', () => {
+  it('returns the listed products among the identifiers, and leaves the others out', async () => {
+    const { call, product } = await withProduct();
+    const draft = (await call(seller, 'POST', '/seller/products', rugInput)).json<{ id: string }>();
+    await call(seller, 'POST', `/seller/products/${product.id}/status`, { status: 'PUBLISHED' });
+    const unknown = '0199f0a4-7a5b-7c1e-9f00-0000000000ff';
+
+    const response = await call(
+      visitor,
+      'GET',
+      `/products?ids=${product.id},${draft.id},${unknown},${product.id}`,
+    );
+    expect(response.statusCode).toBe(200);
+    expect(response.json<{ items: { id: string }[] }>().items.map((item) => item.id)).toEqual([
+      product.id,
+    ]);
+  });
+
+  it('bounds the lookup to 50 valid identifiers', async () => {
+    const { call } = await setup();
+    const ids = Array.from(
+      { length: 51 },
+      (_, index) => `0199f0a4-7a5b-7c1e-9f00-${String(index).padStart(12, '0')}`,
+    );
+
+    expect((await call(visitor, 'GET', `/products?ids=${ids.join(',')}`)).statusCode).toBe(400);
+    expect((await call(visitor, 'GET', '/products?ids=not-a-uuid')).statusCode).toBe(400);
+  });
+});
+
 describe('search (US-02)', () => {
   it('passes validated queries to the index', async () => {
     const { call, search } = await setup();

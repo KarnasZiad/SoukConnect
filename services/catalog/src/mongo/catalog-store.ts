@@ -224,6 +224,24 @@ export class MongoCatalogStore implements CatalogStore {
     return shop ? { product: toProduct(product), shop: toShop(shop) } : null;
   }
 
+  async getListedProducts(ids: readonly string[]): Promise<{ product: Product; shop: Shop }[]> {
+    if (ids.length === 0) return [];
+    const products = await this.products
+      .find({ _id: { $in: [...ids] }, status: 'PUBLISHED' })
+      .toArray();
+    const shopIds = [...new Set(products.map((product) => product.shopId))];
+    const shops = new Map(
+      (await this.shops.find({ _id: { $in: shopIds }, status: 'ACTIVE' }).toArray()).map((shop) => [
+        shop._id,
+        toShop(shop),
+      ]),
+    );
+    return products.flatMap((product) => {
+      const shop = shops.get(product.shopId);
+      return shop ? [{ product: toProduct(product), shop }] : [];
+    });
+  }
+
   async getForIndex(productId: string): Promise<{ product: Product; shop: Shop } | null> {
     const product = await this.products.findOne({ _id: productId });
     if (!product) return null;
