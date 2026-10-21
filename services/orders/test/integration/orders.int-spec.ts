@@ -120,18 +120,20 @@ describe('placing an order', () => {
 
 describe('running the saga', () => {
   it('awaits the payment at the reserved prices, then confirms', async () => {
+    // The real clock: messages are ordered by their UUID v7, which follows the time of creation.
+    store = new PostgresOrderStore(sql);
     const order = await placed();
     const message = reserved(order.id);
 
+    const before = Date.now();
     await store.handle(message, (current, now) => onStockReserved(current, message.payload, now));
     await store.handle(message, (current, now) => onStockReserved(current, message.payload, now));
 
     const awaiting = await store.getForBuyer(buyerId, order.id);
-    expect(awaiting).toMatchObject({
-      status: 'AWAITING_PAYMENT',
-      total: 500_000,
-      paymentDeadline: new Date('2026-10-21T08:15:00Z'),
-    });
+    expect(awaiting).toMatchObject({ status: 'AWAITING_PAYMENT', total: 500_000 });
+    const window = (awaiting?.paymentDeadline?.getTime() ?? 0) - before;
+    expect(window).toBeGreaterThanOrEqual(15 * 60_000);
+    expect(window).toBeLessThan(15 * 60_000 + 5_000);
     expect(awaiting?.lines.map((line) => line.unitPrice)).toEqual([450_000, 25_000]);
     const sent = await outbox();
     expect(sent.map((entry) => entry.type)).toEqual([
