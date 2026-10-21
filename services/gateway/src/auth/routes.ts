@@ -3,7 +3,8 @@ import { conflict, type createService, ProblemError, unauthorized } from '@soukc
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { CartStore } from '../cart/cart-store.js';
-import { requireSession } from '../http/context.js';
+import type { InternalClient } from '../proxy/internal-client.js';
+import { actorOf, requireSession } from '../http/context.js';
 import type { Account, AccountStore } from './accounts.js';
 import type { LoginGuard } from './login-guard.js';
 import { hashPassword, verifyPassword } from './passwords.js';
@@ -16,6 +17,7 @@ export interface AuthDeps {
   sessions: SessionStore;
   guard: LoginGuard;
   carts: CartStore;
+  internal: InternalClient;
 }
 
 // Pasted addresses often carry spaces or capitals: one person, one account.
@@ -80,6 +82,27 @@ export function registerAuthRoutes(app: App, deps: AuthDeps): void {
       });
       if (account === 'email-taken') throw conflict('An account already uses this e-mail');
       await signIn(request, reply, account);
+      // The notifications service keeps the contact it needs to send e-mails. Best effort: the
+      // account exists either way, and the contact is written again at the next sign-up attempt.
+      try {
+        const saved = await deps.internal.call(
+          'notifications',
+          actorOf({ userId: account.id, role: account.role, createdAt: 0 }),
+          {
+            method: 'PUT',
+            path: '/contacts/me',
+            body: {
+              email: account.email,
+              displayName: account.displayName,
+              locale: account.locale,
+            },
+            requestId: request.id,
+          },
+        );
+        if (saved.status !== 204) request.log.warn({ status: saved.status }, 'contact not saved');
+      } catch (error) {
+        request.log.warn({ err: error }, 'contact not saved');
+      }
       return reply.code(201).send(toView(account));
     },
   );
@@ -155,6 +178,21 @@ export function registerAuthRoutes(app: App, deps: AuthDeps): void {
       const found = account ? await deps.accounts.findByEmail(account.email) : null;
       if (!found || !(await verifyPassword(found.passwordHash, request.body.password))) {
         throw new ProblemError(401, 'Unauthorized', INVALID);
+      }
+      // The copy of the contact goes first: no account is erased while its e-mail survives elsewhere.
+      const erased = await deps.internal
+        .call('notifications', actorOf(session), {
+          method: 'DELETE',
+          path: '/contacts/me',
+          requestId: request.id,
+        })
+        .catch(() => null);
+      if (erased?.status !== 204) {
+        throw new ProblemError(
+          503,
+          'Service Unavailable',
+          'The account cannot be deleted right now',
+        );
       }
       await deps.accounts.delete(session.userId);
       await deps.sessions.destroyAllOf(session.userId);

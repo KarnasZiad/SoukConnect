@@ -25,7 +25,14 @@ updates:
       prefix: ci
 
   - package-ecosystem: docker
-    directories: [/services/gateway, /services/catalog, /services/orders, /services/payments]
+    directories:
+      [
+        /services/gateway,
+        /services/catalog,
+        /services/orders,
+        /services/payments,
+        /services/notifications,
+      ]
     schedule:
       interval: weekly
     commit-message:
