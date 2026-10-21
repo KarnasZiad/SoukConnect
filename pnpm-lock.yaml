@@ -234,6 +234,52 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12(@types/node@22.20.5)(@vitest/coverage-v8@4.1.12)(vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1))
 
+  services/payments:
+    dependencies:
+      '@soukconnect/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@soukconnect/messaging':
+        specifier: workspace:*
+        version: link:../../packages/messaging
+      '@soukconnect/service-kit':
+        specifier: workspace:*
+        version: link:../../packages/service-kit
+      fastify:
+        specifier: ^5.12.7
+        version: 5.12.7
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
+      stripe:
+        specifier: ^22.6.2
+        version: 22.6.2(@types/node@22.20.5)
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@testcontainers/postgresql':
+        specifier: ^11.14.0
+        version: 11.14.0
+      '@testcontainers/rabbitmq':
+        specifier: ^11.14.0
+        version: 11.14.0
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      '@vitest/coverage-v8':
+        specifier: ^4.1.12
+        version: 4.1.12(vitest@4.1.12)
+      testcontainers:
+        specifier: ^11.14.0
+        version: 11.14.0
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      vitest:
+        specifier: ^4.1.12
+        version: 4.1.12(@types/node@22.20.5)(@vitest/coverage-v8@4.1.12)(vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1))
+
 packages:
 
   '@babel/code-frame@7.29.7':
@@ -2204,6 +2250,15 @@ packages:
   strip-ansi@7.2.0:
     resolution: {integrity: sha512-yDPMNjp4WyfYBkHnjIRLfca1i6KMyGCtsVgoKe/z1+6vukgaENdgGBZt+ZmKPc4gavvEZ5OgHfHdrazhgNyG7w==}
     engines: {node: '>=12'}
+
+  stripe@22.6.2:
+    resolution: {integrity: sha512-PwRE2scocvXqDKPiskMa5vRJEAEkq46W69XyUYmAwrNSLr675lQnfqLwnsndAWizwgihOWw/irLmoFRo3ez7ew==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   supports-color@7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
@@ -4390,6 +4445,10 @@ snapshots:
   strip-ansi@7.2.0:
     dependencies:
       ansi-regex: 6.4.0
+
+  stripe@22.6.2(@types/node@22.20.5):
+    optionalDependencies:
+      '@types/node': 22.20.5
 
   supports-color@7.2.0:
     dependencies:
