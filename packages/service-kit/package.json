@@ -34,7 +34,7 @@
     "@soukconnect/contracts": "workspace:*",
     "fastify": "^5.12.7",
     "fastify-type-provider-zod": "^7.0.0",
-    "jose": "^6.2.12",
+    "jose": "^6.2.14",
     "pino": "^10.4.0",
     "zod": "^4.6.7"
   },
